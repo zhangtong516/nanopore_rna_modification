@@ -17,7 +17,7 @@ params.reference_genome = null
 params.dorado_model = "rna004_130bps_sup@v3.0.1"
 params.dorado_mods = "m5C,2OmeC,m6A,m6A_DRACH,inosine,2OmeA,pseU,2OmeU,2OmeG"
 params.threads = 8
-params.chunk_size = 500  // Adjust based on your processing speed and file sizes
+params.chunk_size = 20  // Adjust based on your processing speed and file sizes
 params.help = false
 
 // Help message
@@ -120,12 +120,10 @@ workflow {
     )
     
     MODIFICATION_ANALYSIS(
-        MERGE_CHUNKS.out.basecalled_bam,
-        MINIMAP2_ALIGNMENT.out.aligned_bam,
+        MERGE_CHUNKS.out.basecalled_bam.join(MINIMAP2_ALIGNMENT.out.aligned_bam),
         reference_ch
     )
-    
-    GENERATE_SUMMARY(MERGE_CHUNKS.out.basecalled_bam)
+
     // Collect all outputs for report generation
     summary_ch = MERGE_CHUNKS.out.summary.collect()
     polya_summary_ch = MERGE_CHUNKS.out.polya_summary.collect()
