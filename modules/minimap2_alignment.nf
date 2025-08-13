@@ -18,23 +18,23 @@ process MINIMAP2_ALIGNMENT {
     """
     # Index reference genome if needed
     if [ ! -f ${reference_genome}.mmi ]; then
-        minimap2 -d ${reference_genome}.mmi ${reference_genome}
+        ${params.minimap2} -d ${reference_genome}.mmi ${reference_genome}
     fi
     
     # Align reads using minimap2 with RNA-specific parameters
-    minimap2 -ax splice \
+    ${params.minimap2} -ax splice \
         -uf \
         -k14 \
         -t ${params.threads} \
         ${reference_genome} \
         ${basecalled_fastq} | \
-    samtools sort -@ ${params.threads} -o ${samplename}_aligned.bam -
+    ${params.samtools} sort -@ ${params.threads} -o ${samplename}_aligned.bam -
     
     # Index the BAM file
-    samtools index aligned.bam
+    ${params.samtools} index aligned.bam
     
     # Generate alignment statistics
-    samtools flagstat ${samplename}_aligned.bam > ${samplename}_alignment_stats.txt
-    samtools stats ${samplename}_aligned.bam >> ${samplename}_alignment_stats.txt
+    ${params.samtools} flagstat ${samplename}_aligned.bam > ${samplename}_alignment_stats.txt
+    ${params.samtools} stats ${samplename}_aligned.bam >> ${samplename}_alignment_stats.txt
     """
 }

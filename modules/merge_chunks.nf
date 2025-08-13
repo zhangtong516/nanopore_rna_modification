@@ -26,7 +26,7 @@ process MERGE_CHUNKS {
     fi
     
     # Convert merged BAM to FASTQ
-    samtools fastq ${samplename}_basecalled.bam | gzip > ${samplename}_basecalled.fastq.gz
+    ${params.samtools} fastq ${samplename}_basecalled.bam | gzip > ${samplename}_basecalled.fastq.gz
     
     # Merge sequencing summaries
     echo "Merged sequencing summary for ${samplename}" > ${samplename}_sequencing_summary.txt

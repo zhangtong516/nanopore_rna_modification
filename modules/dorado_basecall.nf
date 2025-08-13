@@ -44,7 +44,7 @@ process DORADO_BASECALL {
     nvidia-smi || echo "Warning: No GPU detected, falling back to CPU"
     
     # Run Dorado basecalling with SUP model, RNA modifications, and polyA estimation
-    dorado basecaller \
+    ${params.dorado} basecaller \
         --modified-bases ${params.dorado_rna_model},${params.dorado_mods_models} \
         --device cuda:all \
         --estimate-poly-a \
@@ -55,21 +55,21 @@ process DORADO_BASECALL {
         > ${samplename}_chunk_${chunk_id}_basecalled.bam
     
     # Convert to FASTQ for downstream analysis
-    samtools fastq ${samplename}_chunk_${chunk_id}_basecalled.bam | gzip > ${samplename}_chunk_${chunk_id}_basecalled.fastq.gz
+    ${params.samtools} fastq ${samplename}_chunk_${chunk_id}_basecalled.bam | gzip > ${samplename}_chunk_${chunk_id}_basecalled.fastq.gz
     
     # Generate sequencing summary
-    samtools stats ${samplename}_chunk_${chunk_id}_basecalled.bam > ${samplename}_chunk_${chunk_id}_sequencing_summary.txt
+    ${params.samtools} stats ${samplename}_chunk_${chunk_id}_basecalled.bam > ${samplename}_chunk_${chunk_id}_sequencing_summary.txt
     
     # Extract modification calls to separate file
-    samtools view -h ${samplename}_chunk_${chunk_id}_basecalled.bam | \
+    ${params.samtools} view -h ${samplename}_chunk_${chunk_id}_basecalled.bam | \
     awk '/^@/ {print; next} {if(\$0 ~ /MM:Z:/ || \$0 ~ /ML:B:/) print}' | \
-    samtools view -bS - | \
-    samtools view - | \
+    ${params.samtools} view -bS - | \
+    ${params.samtools} view - | \
     cut -f1,3,4,12- | \
     grep -E "MM:Z:|ML:B:" > ${samplename}_chunk_${chunk_id}_modification_calls.tsv || touch ${samplename}_chunk_${chunk_id}_modification_calls.tsv
     
     # Extract polyA tail lengths from pt:i tags in BAM file
-    samtools view ${samplename}_chunk_${chunk_id}_basecalled.bam | \
+    ${params.samtools} view ${samplename}_chunk_${chunk_id}_basecalled.bam | \
     awk 'BEGIN{OFS="\t"; print "read_id", "polya_length", "read_length", "status"} 
          {read_id=\$1; read_len=length(\$10); 
           polya_len="NA"; status="not_found";

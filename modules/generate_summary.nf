@@ -16,20 +16,22 @@ process GENERATE_SUMMARY {
     script:
     """
     # Generate sequencing summary
-    samtools stats ${basecalled_bam} > ${samplename}_sequencing_summary.txt
+    ${params.samtools} stats ${basecalled_bam} > ${samplename}_sequencing_summary.txt
+
 
     
     # Extract modification calls to separate file
-    samtools view -h ${basecalled_bam} | \
+    ${params.samtools} view -h ${basecalled_bam} | \
     awk '/^@/ {print; next} {if(\$0 ~ /MM:Z:/ || \$0 ~ /ML:B:/) print}' | \
-    samtools view -bS - | \
-    samtools view - | \
+    ${params.samtools} view -bS - | \
+    ${params.samtools} view - | \
     cut -f1,3,4,12- | \
     grep -E "MM:Z:|ML:B:" > ${samplename}_modification_calls.tsv || touch ${samplename}_modification_calls.tsv
 
     
     # Extract polyA tail lengths from pt:i tags in BAM file
-    samtools view ${basecalled_bam} | \  
+    ${params.samtools} view ${basecalled_bam} | \  
+
     awk 'BEGIN{OFS="\t"; print "read_id", "polya_length", "read_length", "status"} 
          {read_id=\$1; read_len=length(\$10); 
           polya_len="NA"; status="not_found";

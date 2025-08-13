@@ -19,7 +19,8 @@ process MODIFICATION_ANALYSIS {
     # Use modkit to extract and analyze modifications
     
     # Extract modifications to bedMethyl format
-    modkit extract whole-genome \
+    ${params.modkit} extract whole-genome \
+
         --cpg \
         --chh \
         --chg \
