@@ -2,7 +2,7 @@ process CHUNK_FILES {
     tag "Chunking files for ${samplename}"
     
     input:
-    tuple val(samplename), path(input_dir)
+    tuple val(samplename), val(input_dir)
     
     output:
     tuple val(samplename), path("chunk_*.txt"), emit: file_chunks

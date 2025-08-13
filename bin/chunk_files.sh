@@ -16,8 +16,11 @@ echo "Chunking files for ${samplename}"
 echo "Input directory: ${input_dir}"
 echo "Chunk size: ${chunk_size}"
 
-# Find all FAST5/POD5 files
-find "${input_dir}/" -name "*.fast5" -o -name "*.pod5" > all_files.txt
+# Find all FAST5/POD5 files and resolve real paths (not symlinks)
+find "${input_dir}/" -name "*.fast5" -o -name "*.pod5" | while read -r file; do
+    # Get the real path (resolve symlinks)
+    realpath "$file"
+done > all_files.txt
 
 # Check if we found any files
 if [ ! -s all_files.txt ]; then

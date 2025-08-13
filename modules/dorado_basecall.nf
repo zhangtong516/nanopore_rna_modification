@@ -44,16 +44,15 @@ process DORADO_BASECALL {
     nvidia-smi || echo "Warning: No GPU detected, falling back to CPU"
     
     # Run Dorado basecalling with SUP model, RNA modifications, and polyA estimation
-    ${params.dorado} basecaller \
-        --modified-bases ${params.dorado_rna_model},${params.dorado_mods_models} \
-        --device cuda:all \
+    ${params.dorado} basecaller ${params.dorado_model},${params.dorado_mods_models} \
+        --device cuda:0 \
         --estimate-poly-a \
         --min-qscore ${params.min_qscore} \
-        --kit-name ${params.kit_name} \
         --emit-moves \
+        --batchsize 0 \
         input_files/ \
         > ${samplename}_chunk_${chunk_id}_basecalled.bam
-    
+        
     # Convert to FASTQ for downstream analysis
     ${params.samtools} fastq ${samplename}_chunk_${chunk_id}_basecalled.bam | gzip > ${samplename}_chunk_${chunk_id}_basecalled.fastq.gz
     
