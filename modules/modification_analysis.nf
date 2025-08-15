@@ -12,6 +12,8 @@ process MODIFICATION_ANALYSIS {
     output:
     tuple val(samplename), path("${samplename}_modifications.bed"), emit: modifications_bed
     tuple val(samplename), path("${samplename}_modification_summary.txt"), emit: mod_summary
+    path("${samplename}_modification_analysis.log"), emit: modkit_log 
+
     
     script:
     """
@@ -20,7 +22,6 @@ process MODIFICATION_ANALYSIS {
     
     # Extract modifications to bedMethyl format
     ${params.modkit} extract whole-genome \
-
         --cpg \
         --chh \
         --chg \
@@ -28,6 +29,15 @@ process MODIFICATION_ANALYSIS {
         ${samplename}_modifications.bed \
         --ref ${reference_genome}
     
+
+    modkit pileup $aligned_bam ${samplename}_modifications.bed \
+        --ref ${reference_genome} \
+        --threads ${task.cpus} \
+        --log-filepath ${samplename}_modification_analysis.log \
+        --combine-strands \
+        --min-coverage 10 \
+        --filter-threshold 0.1
+
     # Generate modification summary
     echo "RNA Modification Analysis Summary" > ${samplename}_modification_summary.txt
     echo "================================" >> ${samplename}_modification_summary.txt

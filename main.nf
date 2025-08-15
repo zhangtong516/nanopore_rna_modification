@@ -6,7 +6,7 @@ nextflow.enable.dsl = 2
 include { CHUNK_FILES } from './modules/chunk_files'
 include { DORADO_BASECALL } from './modules/dorado_basecall'
 include { MERGE_CHUNKS } from './modules/merge_chunks'
-include { MINIMAP2_ALIGNMENT } from './modules/minimap2_alignment'
+include { DORADO_ALIGNER } from './modules/dorado_aligner' 
 include { MODIFICATION_ANALYSIS } from './modules/modification_analysis'
 include { GENERATE_REPORT } from './modules/generate_report'
 
@@ -14,9 +14,6 @@ include { GENERATE_REPORT } from './modules/generate_report'
 params.samplesheet = null
 params.output_dir = "./results"
 params.reference_genome = null
-params.dorado_model = "rna004_130bps_sup@v3.0.1"
-params.dorado_mods = "m5C,2OmeC,m6A,m6A_DRACH,inosine,2OmeA,pseU,2OmeU,2OmeG"
-params.threads = 8
 params.chunk_size = 20  // Adjust based on your processing speed and file sizes
 params.help = false
 
@@ -35,7 +32,7 @@ if (params.help) {
     
     Optional arguments:
         --output_dir        Output directory (default: ./results)
-        --dorado_model      Dorado basecalling model (default: rna004_130bps_sup@v3.0.1)
+        --dorado_model      Dorado basecalling model (default: sup)
         --dorado_mods       RNA modifications to call (default: m5C,2OmeC,m6A,m6A_DRACH,inosine,2OmeA,pseU,2OmeU,2OmeG)
         --threads           Number of threads (default: 8)
         --chunk_size        Files per chunk (default: 500)
@@ -46,8 +43,8 @@ if (params.help) {
         
     Samplesheet format:
         samplename,input_dir
-        sample1,/path/to/sample1/fast5_files
-        sample2,/path/to/sample2/fast5_files
+        sample1,/path/to/sample1/pod5/
+        sample2,/path/to/sample2/pod5/
     """
     exit 0
 }
@@ -102,9 +99,15 @@ workflow {
     
     // Process each chunk with Dorado
     DORADO_BASECALL(chunked_files)
+
+    // Process alignment for each chunk 
+    DORADO_ALIGNER(
+        DORADO_BASECALL.out.basecalled_bam,
+        reference_ch
+    )
     
     // Group chunks by sample for merging
-    grouped_chunks = DORADO_BASECALL.out.basecalled_bam
+    grouped_chunks = DORADO_ALIGNER.out.aligned_bam
         .groupTuple(by: 0)
         .map { samplename, bam_files -> 
             tuple(samplename, bam_files.flatten())
@@ -113,29 +116,19 @@ workflow {
     // Merge chunks back together
     MERGE_CHUNKS(grouped_chunks)
     
-    // Continue with downstream analysis using merged files
-    MINIMAP2_ALIGNMENT(
-        MERGE_CHUNKS.out.basecalled_fastq,
-        reference_ch
-    )
-    
+    // Modification analysis
     MODIFICATION_ANALYSIS(
-        MERGE_CHUNKS.out.basecalled_bam.join(MINIMAP2_ALIGNMENT.out.aligned_bam),
+        DORADO_ALIGNER.out.aligned_bam,
         reference_ch
     )
 
     // Collect all outputs for report generation
-    summary_ch = MERGE_CHUNKS.out.summary.collect()
-    polya_summary_ch = MERGE_CHUNKS.out.polya_summary.collect()
-    alignment_stats_ch = MINIMAP2_ALIGNMENT.out.alignment_stats.collect()
-    mod_summary_ch = MODIFICATION_ANALYSIS.out.mod_summary.collect()
-    
     summary_ch = MERGE_CHUNKS.out.summary.join(
         MERGE_CHUNKS.out.polya_summary
     ).join(
         MODIFICATION_ANALYSIS.out.mod_summary
     ).join(
-        MINIMAP2_ALIGNMENT.out.alignment_stats
+        DORADO_ALIGNMENT.out.alignment_stats
     )
 
     GENERATE_REPORT(summary_ch) 
