@@ -35,7 +35,7 @@ if (params.help) {
         --dorado_model      Dorado basecalling model (default: sup)
         --dorado_mods       RNA modifications to call (default: m5C,2OmeC,m6A,m6A_DRACH,inosine,2OmeA,pseU,2OmeU,2OmeG)
         --threads           Number of threads (default: 8)
-        --chunk_size        Files per chunk (default: 500)
+        --chunk_size        Files per chunk (default: 20)
         --help              Show this help message
         
     Resume after interruption:
@@ -118,7 +118,7 @@ workflow {
     
     // Modification analysis
     MODIFICATION_ANALYSIS(
-        DORADO_ALIGNER.out.aligned_bam,
+        MERGE_CHUNKS.out.merged_aligned_bam,
         reference_ch
     )
 
@@ -128,7 +128,7 @@ workflow {
     ).join(
         MODIFICATION_ANALYSIS.out.mod_summary
     ).join(
-        DORADO_ALIGNMENT.out.alignment_stats
+        MERGE_CHUNKS.out.alignment_stats
     )
 
     GENERATE_REPORT(summary_ch) 

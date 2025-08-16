@@ -21,6 +21,6 @@ process DORADO_ALIGNER {
         ${reference_genome} \
         ${basecalled_bam} \
         --threads ${params.threads} \
-        --mm2-opts '-x splice -uf -k14' > ${samplename}_chunk_${chunk_id}_aligned.bam
+        --mm2-opts '-x splice -k 14' > ${samplename}_chunk_${chunk_id}_aligned.bam
     """
 }

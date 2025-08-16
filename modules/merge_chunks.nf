@@ -9,6 +9,7 @@ process MERGE_CHUNKS {
     output:
     tuple val(samplename), path("${samplename}_aligned.bam"), emit: merged_aligned_bam
     tuple val(samplename), path("${samplename}_sequencing_summary.txt"), emit: summary
+    tuple val(samplename), path("${samplename}_sequencing_stat.txt"), emit: alignment_stats
     tuple val(samplename), path("${samplename}_polya_results.tsv"), emit: polya_results
     tuple val(samplename), path("${samplename}_polya_summary.txt"), emit: polya_summary
     
@@ -25,9 +26,11 @@ process MERGE_CHUNKS {
 
     samtools sort --threads ${task.cpus} ${samplename}_aligned_merged.bam -o ${samplename}_aligned.bam 
     rm ${samplename}_aligned_merged.bam
-    
+
     # Generate sequencing summary
     ${params.samtools} stats ${samplename}_aligned.bam > ${samplename}_sequencing_summary.txt
+    # alignment summary
+    ${params.samtools} flagstat ${samplename}_aligned.bam > ${samplename}_sequencing_stat.txt
     
     # Extract polyA tail lengths from pt:i tags in BAM file
     ${params.samtools} view ${samplename}_aligned.bam | \
