@@ -3,12 +3,29 @@ import os
 import sys
 from datetime import datetime
 
+def extract_summary_stats(seq_summary_content):
+    """Extract only the summary statistics from samtools stats output"""
+    lines = seq_summary_content.strip().split('\n')
+    summary_lines = []
+    
+    # Extract key summary statistics (SN lines)
+    for line in lines:
+        if line.startswith('SN\t'):
+            # Remove 'SN\t' prefix and format nicely
+            stat_line = line[3:].strip()
+            summary_lines.append(stat_line)
+    
+    return '\n'.join(summary_lines)
+
 def generate_html_report(samplename, summary_file, polya_summary_file, mod_summary_file, alignment_stats_file):
     """Generate HTML report from input files"""
     
     # Read input files
     with open(summary_file, 'r') as f:
-        seq_summary = f.read()
+        seq_summary_full = f.read()
+    
+    # Extract only summary statistics
+    seq_summary = extract_summary_stats(seq_summary_full)
 
     with open(polya_summary_file, 'r') as f:
         polya_summary = f.read()

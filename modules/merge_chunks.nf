@@ -18,7 +18,7 @@ process MERGE_CHUNKS {
     # Merge BAM files
     if [ \$(echo ${bam_files} | wc -w) -eq 1 ]; then
         # Single file, just copy
-        cp ${bam_files} ${samplename}_aligned.bam
+        cp ${bam_files} ${samplename}_aligned_merged.bam
     else
         # Multiple files, merge
         samtools merge --threads ${task.cpus} ${samplename}_aligned_merged.bam ${bam_files} 
@@ -35,7 +35,7 @@ process MERGE_CHUNKS {
     # Extract polyA tail lengths from pt:i tags in BAM file
     ${params.samtools} view ${samplename}_aligned.bam | \
     awk 'BEGIN{OFS="\t"; print "read_id", "polya_length", "read_length", "status"} 
-         {read_id=\$1; read_len=length(\$10); 
+         {read_id=\$1; read_len=length(\$10); q
           polya_len="NA"; status="not_found";
           # Look for pt:i tag in BAM
           for(i=12; i<=NF; i++) {

@@ -6,7 +6,7 @@ process MODIFICATION_ANALYSIS {
     storeDir "${params.output_dir}/modifications"
     
     input:
-    tuple val(samplename), path(basecalled_bam), path(aligned_bam)
+    tuple val(samplename), path(aligned_bam)
     path reference_genome
     
     output:
@@ -19,24 +19,14 @@ process MODIFICATION_ANALYSIS {
     """
     # Extract modification calls from Dorado BAM
     # Use modkit to extract and analyze modifications
-    
-    # Extract modifications to bedMethyl format
-    ${params.modkit} extract whole-genome \
-        --cpg \
-        --chh \
-        --chg \
-        ${basecalled_bam} \
-        ${samplename}_modifications.bed \
-        --ref ${reference_genome}
-    
+    ${params.samtools} index -@ ${task.cpus} $aligned_bam
 
-    modkit pileup $aligned_bam ${samplename}_modifications.bed \
+    ${params.modkit} pileup $aligned_bam ${samplename}_modifications.bed \
         --ref ${reference_genome} \
         --threads ${task.cpus} \
         --log-filepath ${samplename}_modification_analysis.log \
-        --combine-strands \
-        --min-coverage 10 \
-        --filter-threshold 0.1
+        --filter-threshold 0.1 \
+        --combine-mods 
 
     # Generate modification summary
     echo "RNA Modification Analysis Summary" > ${samplename}_modification_summary.txt
