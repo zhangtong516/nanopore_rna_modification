@@ -102,8 +102,7 @@ workflow {
 
     // Process alignment for each chunk 
     DORADO_ALIGNER(
-        DORADO_BASECALL.out.basecalled_bam,
-        reference_ch
+        DORADO_BASECALL.out.basecalled_bam.combine(reference_ch)
     )
     
     // Group chunks by sample for merging
