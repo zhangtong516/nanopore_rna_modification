@@ -1,7 +1,7 @@
 process MERGE_CHUNKS {
     tag "Merging chunks for ${samplename}"
     
-    storeDir "${params.output_dir}/basecalling"
+    storeDir "${params.output_dir}/merged"
     
     input:
     tuple val(samplename), path(bam_files)
