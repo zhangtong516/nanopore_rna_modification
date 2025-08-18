@@ -19,9 +19,9 @@ process MODIFICATION_ANALYSIS {
     """
     # Extract modification calls from Dorado BAM
     # Use modkit to extract and analyze modifications
-    ${params.samtools} index -@ ${task.cpus} $aligned_bam
+    ${params.samtools} index -@ ${task.cpus} ${aligned_bam}
 
-    ${params.modkit} pileup $aligned_bam ${samplename}_modifications.bed \
+    ${params.modkit} pileup ${aligned_bam} ${samplename}_modifications.bed \
         --ref ${reference_genome} \
         --threads ${task.cpus} \
         --log-filepath ${samplename}_modification_analysis.log \

@@ -109,7 +109,7 @@ workflow {
     // Group chunks by sample for merging
     grouped_chunks = DORADO_ALIGNER.out.aligned_bam
         .groupTuple(by: 0)
-        .map { samplename, bam_files -> 
+        .map { samplename, bam_files, chunk_ids -> 
             tuple(samplename, bam_files.flatten())
         }
     

@@ -6,12 +6,11 @@ process DORADO_ALIGNER {
     storeDir "${params.output_dir}/alignment"
     
     input:
-    tuple val(samplename), path(basecalled_bam), val(chunk_id) 
-
+    tuple val(samplename), path(basecalled_bam), val(chunk_id)
     path reference_genome
     
     output:
-    tuple val(samplename), path("${samplename}_chunk_${chunk_id}_aligned.bam"), emit: aligned_bam
+    tuple val(samplename), path("${samplename}_chunk_${chunk_id}_aligned.bam"), val(chunk_id), emit: aligned_bam
     
     script:
     """
