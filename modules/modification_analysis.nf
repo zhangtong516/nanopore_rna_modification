@@ -11,6 +11,7 @@ process MODIFICATION_ANALYSIS {
     
     output:
     tuple val(samplename), path("${samplename}_modifications.bed"), emit: modifications_bed
+    tuple val(samplename), path("${samplename}_modifications.anno.bed"), emit: modifications_anno_bed
     tuple val(samplename), path("${samplename}_modification_summary.txt"), emit: mod_summary
     path("${samplename}_modification_analysis.log"), emit: modkit_log 
 
@@ -21,12 +22,16 @@ process MODIFICATION_ANALYSIS {
     # Use modkit to extract and analyze modifications
     ${params.samtools} index -@ ${task.cpus} ${aligned_bam}
 
-    ${params.modkit} pileup ${aligned_bam} ${samplename}_modifications.bed \
+    ${params.modkit} pileup $\
         --ref ${reference_genome} \
         --threads ${task.cpus} \
+        --mod-threshold a:0.10 --mod-threshold 17802:0.10 --mod-threshold 17596:0.10 --mod-threshold 69426:0.10 \        
+        --mod-threshold m:0.10 --mod-threshold 19229:0.10 --mod-threshold 19227:0.10 --mod-threshold 19228:0.10 \
         --log-filepath ${samplename}_modification_analysis.log \
-        --filter-threshold 0.1 \
-        --combine-mods 
+        --motif A 0 --motif T 0 --motif C 0 --motif G 0 \
+        {aligned_bam} ${samplename}_modifications.bed 
+
+    Rscript ${projectDir}/bin/process_modkit_out.R ${samplename}_modifications.bed  ${samplename}_modifications.anno.bed --cov 1 --rate 0.0 
 
     # Generate modification summary
     echo "RNA Modification Analysis Summary" > ${samplename}_modification_summary.txt
