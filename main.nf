@@ -100,6 +100,27 @@ workflow {
     // Process each chunk with Dorado
     DORADO_BASECALL(chunked_files)
 
+    // Pair chunk file lists with basecalled BAMs for validation
+    paired_for_validation = Channel
+        .from(
+            chunked_files.map { s, file_list, id -> tuple(tuple(s,id), file_list) },
+            DORADO_BASECALL.out.basecalled_bam.map { s, bam, id -> tuple(tuple(s,id), bam) }
+        )
+        .join()
+        .map { key, file_list, bam ->
+            def (samplename, chunk_id) = key
+            tuple(samplename, file_list, chunk_id, bam)
+        }
+
+    // Validate read counts (POD5 vs BAM) per chunk; fail if >5% difference
+    VALIDATE_READ_COUNTS(paired_for_validation)
+
+    // Process alignment for each chunk using validated BAMs
+    DORADO_ALIGNER(
+        VALIDATE_READ_COUNTS.out.validated_bam,
+        reference_ch
+    )
+    
     // Process alignment for each chunk 
     DORADO_ALIGNER(
         DORADO_BASECALL.out.basecalled_bam.combine(reference_ch)

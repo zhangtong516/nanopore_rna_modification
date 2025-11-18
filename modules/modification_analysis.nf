@@ -21,15 +21,16 @@ process MODIFICATION_ANALYSIS {
     # Extract modification calls from Dorado BAM
     # Use modkit to extract and analyze modifications
     ${params.samtools} index -@ ${task.cpus} ${aligned_bam}
+    ${params.samtools} faidx $reference_genome
 
-    ${params.modkit} pileup $\
+    ${params.modkit} pileup \
         --ref ${reference_genome} \
         --threads ${task.cpus} \
         --mod-threshold a:0.10 --mod-threshold 17802:0.10 --mod-threshold 17596:0.10 --mod-threshold 69426:0.10 \        
         --mod-threshold m:0.10 --mod-threshold 19229:0.10 --mod-threshold 19227:0.10 --mod-threshold 19228:0.10 \
         --log-filepath ${samplename}_modification_analysis.log \
         --motif A 0 --motif T 0 --motif C 0 --motif G 0 \
-        {aligned_bam} ${samplename}_modifications.bed 
+        ${aligned_bam} ${samplename}_modifications.bed 
 
     Rscript ${projectDir}/bin/process_modkit_out.R ${samplename}_modifications.bed  ${samplename}_modifications.anno.bed --cov 1 --rate 0.0 
 
