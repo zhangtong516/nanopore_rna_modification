@@ -11,8 +11,6 @@ process MODIFICATION_ANALYSIS {
     
     output:
     tuple val(samplename), path("${samplename}_modifications.bed"), emit: modifications_bed
-    tuple val(samplename), path("${samplename}_modifications.anno.bed"), emit: modifications_anno_bed
-    tuple val(samplename), path("${samplename}_modification_summary.txt"), emit: mod_summary
     path("${samplename}_modification_analysis.log"), emit: modkit_log 
 
     
@@ -26,28 +24,12 @@ process MODIFICATION_ANALYSIS {
     ${params.modkit} pileup \
         --ref ${reference_genome} \
         --threads ${task.cpus} \
-        --mod-threshold a:0.10 --mod-threshold 17802:0.10 --mod-threshold 17596:0.10 --mod-threshold 69426:0.10 \        
+        --mod-threshold a:0.10 --mod-threshold 17802:0.10 --mod-threshold 17596:0.10 --mod-threshold 69426:0.10 \
         --mod-threshold m:0.10 --mod-threshold 19229:0.10 --mod-threshold 19227:0.10 --mod-threshold 19228:0.10 \
         --log-filepath ${samplename}_modification_analysis.log \
         --motif A 0 --motif T 0 --motif C 0 --motif G 0 \
         ${aligned_bam} ${samplename}_modifications.bed 
 
-    Rscript ${projectDir}/bin/process_modkit_out.R ${samplename}_modifications.bed  ${samplename}_modifications.anno.bed --cov 1 --rate 0.0 
-
-    # Generate modification summary
-    echo "RNA Modification Analysis Summary" > ${samplename}_modification_summary.txt
-    echo "================================" >> ${samplename}_modification_summary.txt
-    echo "" >> ${samplename}_modification_summary.txt
-    
-    # Count modifications by type
-    if [ -s ${samplename}_modifications.bed ]; then
-        echo "Total modification sites: \$(wc -l < ${samplename}_modifications.bed)" >> ${samplename}_modification_summary.txt
-        
-        # Analyze modification frequencies
-        awk 'BEGIN{OFS="\t"} {mod_type=\$4; freq[mod_type]++} END{for(m in freq) print m, freq[m]}' ${samplename}_modifications.bed | \
-        sort -k2,2nr >> ${samplename}_modification_summary.txt
-    else
-        echo "No modifications detected" >> ${samplename}_modification_summary.txt  
-    fi
+    # Annotation and summary moved to separate module (MODIFICATION_ANNOTATION)
     """
 }

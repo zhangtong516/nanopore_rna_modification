@@ -5,9 +5,11 @@ nextflow.enable.dsl = 2
 // Import modules
 include { CHUNK_FILES } from './modules/chunk_files'
 include { DORADO_BASECALL } from './modules/dorado_basecall'
+include { VALIDATE_READ_COUNTS } from './modules/validate_read_counts'
 include { MERGE_CHUNKS } from './modules/merge_chunks'
 include { DORADO_ALIGNER } from './modules/dorado_aligner' 
 include { MODIFICATION_ANALYSIS } from './modules/modification_analysis'
+include { MODIFICATION_ANNOTATION } from './modules/modification_annotation'
 include { GENERATE_REPORT } from './modules/generate_report'
 
 // Define parameters
@@ -101,26 +103,23 @@ workflow {
     DORADO_BASECALL(chunked_files)
 
     // Pair chunk file lists with basecalled BAMs for validation
-    paired_for_validation = Channel
-        .from(
-            chunked_files.map { s, file_list, id -> tuple(tuple(s,id), file_list) },
-            DORADO_BASECALL.out.basecalled_bam.map { s, bam, id -> tuple(tuple(s,id), bam) }
-        )
-        .join()
+    keyed_files = chunked_files
+        .map { s, file_list, id -> tuple([s, id], file_list) }
+    
+    keyed_bams = DORADO_BASECALL.out.basecalled_bam
+        .map { s, bam, id -> tuple([s, id], bam) }
+    
+    paired_for_validation = keyed_files
+        .join(keyed_bams)
         .map { key, file_list, bam ->
-            def (samplename, chunk_id) = key
+            def samplename = key[0]
+            def chunk_id   = key[1]
             tuple(samplename, file_list, chunk_id, bam)
         }
 
     // Validate read counts (POD5 vs BAM) per chunk; fail if >5% difference
     VALIDATE_READ_COUNTS(paired_for_validation)
 
-    // Process alignment for each chunk using validated BAMs
-    DORADO_ALIGNER(
-        VALIDATE_READ_COUNTS.out.validated_bam,
-        reference_ch
-    )
-    
     // Process alignment for each chunk 
     DORADO_ALIGNER(
         DORADO_BASECALL.out.basecalled_bam.combine(reference_ch)
@@ -136,17 +135,22 @@ workflow {
     // Merge chunks back together
     MERGE_CHUNKS(grouped_chunks)
     
-    // Modification analysis
+    // Modification analysis (produce ModKit bed)
     MODIFICATION_ANALYSIS(
         MERGE_CHUNKS.out.merged_aligned_bam,
         reference_ch
+    )
+
+    // Annotation and summary generation as separate module
+    MODIFICATION_ANNOTATION(
+        MODIFICATION_ANALYSIS.out.modifications_bed
     )
 
     // Collect all outputs for report generation
     summary_ch = MERGE_CHUNKS.out.summary.join(
         MERGE_CHUNKS.out.polya_summary
     ).join(
-        MODIFICATION_ANALYSIS.out.mod_summary
+        MODIFICATION_ANNOTATION.out.mod_summary
     ).join(
         MERGE_CHUNKS.out.alignment_stats
     )
