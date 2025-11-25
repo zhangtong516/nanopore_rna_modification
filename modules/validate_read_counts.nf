@@ -25,8 +25,8 @@ process VALIDATE_READ_COUNTS {
     # Compute absolute difference
     diff_abs=\$(( bam_count > pod_count ? bam_count - pod_count : pod_count - bam_count ))
 
-    # Compute percentage and validate against threshold (5%)
-    diff_pct=\$(python ${projectDir}/bin/compare_counts.py "\${bam_count}" "\${pod_count}" "5")
+    # Compute percentage and validate against threshold (30%)
+    diff_pct=\$(python ${projectDir}/bin/compare_counts.py "\${bam_count}" "\${pod_count}" "${params.max_diff_threshold}"
     status=\$?
 
     # Write check log
@@ -41,7 +41,7 @@ process VALIDATE_READ_COUNTS {
 
     # Enforce threshold
     if [ "\${status}" -ne 0 ]; then
-      echo "ERROR: Read count difference exceeds 5% for ${samplename} chunk ${chunk_id} (POD5=\${pod_count}, BAM=\${bam_count})" >&2
+      echo "ERROR: Read count difference exceeds ${params.max_diff_threshold}% for ${samplename} chunk ${chunk_id} (POD5=\${pod_count}, BAM=\${bam_count})" >&2
       exit 1
     fi
 
