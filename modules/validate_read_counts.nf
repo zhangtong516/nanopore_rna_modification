@@ -4,6 +4,8 @@ process VALIDATE_READ_COUNTS {
     memory '4 GB'
     time '2h'
 
+    publishDir "${params.output_dir}/basecalling/${samplename}", mode: 'copy'
+
     input:
     tuple val(samplename), path(file_list), val(chunk_id), path(basecalled_bam)
 
@@ -17,7 +19,7 @@ process VALIDATE_READ_COUNTS {
     set -euo pipefail
 
     # Count reads in BAM
-    bam_count=\$(${params.samtools} view -c ${basecalled_bam})
+    bam_count=\$(${params.samtools} view ${basecalled_bam} | grep -v "pi:Z" | wc -l )
 
     # Count reads in POD5/FAST5 using helper script
     pod_count=\$(python ${projectDir}/bin/check_read_counts.py "${file_list}")
@@ -26,7 +28,7 @@ process VALIDATE_READ_COUNTS {
     diff_abs=\$(( bam_count > pod_count ? bam_count - pod_count : pod_count - bam_count ))
 
     # Compute percentage and validate against threshold (30%)
-    diff_pct=\$(python ${projectDir}/bin/compare_counts.py "\${bam_count}" "\${pod_count}" "${params.max_diff_threshold}"
+    diff_pct=\$(python ${projectDir}/bin/compare_counts.py "\${bam_count}" "\${pod_count}" "${params.max_diff_threshold}")
     status=\$?
 
     # Write check log

@@ -1,7 +1,7 @@
 process MERGE_CHUNKS {
     tag "Merging chunks for ${samplename}"
     
-    storeDir "${params.output_dir}/merged"
+    publishDir "${params.output_dir}/merged",  mode: 'copy'
     
     input:
     tuple val(samplename), path(bam_files)

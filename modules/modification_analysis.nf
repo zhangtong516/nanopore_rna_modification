@@ -3,11 +3,10 @@ process MODIFICATION_ANALYSIS {
     cpus 4
     memory '16 GB'
     
-    storeDir "${params.output_dir}/modifications"
+    publishDir "${params.output_dir}/modifications",  mode: 'copy' 
     
     input:
-    tuple val(samplename), path(aligned_bam)
-    path reference_genome
+    tuple val(samplename), path(aligned_bam), path(reference_genome) 
     
     output:
     tuple val(samplename), path("${samplename}_modifications.bed"), emit: modifications_bed

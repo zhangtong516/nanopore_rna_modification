@@ -1,7 +1,7 @@
 process GENERATE_REPORT {
     tag "Generating final report"
     
-    storeDir "${params.output_dir}/reports"
+    publishDir "${params.output_dir}/reports",  mode: 'copy'
     
     input:
     tuple val(samplename), path(summary), path(polya_summary), path(mod_summary), path(alignment_stats)

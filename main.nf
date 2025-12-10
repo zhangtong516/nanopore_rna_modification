@@ -137,8 +137,7 @@ workflow {
     
     // Modification analysis (produce ModKit bed)
     MODIFICATION_ANALYSIS(
-        MERGE_CHUNKS.out.merged_aligned_bam,
-        reference_ch
+        MERGE_CHUNKS.out.merged_aligned_bam.combine(reference_ch) 
     )
 
     // Annotation and summary generation as separate module

@@ -11,4 +11,4 @@ process CHUNK_FILES {
     """
     bash ${projectDir}/bin/chunk_files.sh "${input_dir}" "${samplename}" "${params.chunk_size}"
     """
-}
+} 
