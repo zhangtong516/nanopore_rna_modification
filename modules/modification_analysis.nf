@@ -3,7 +3,7 @@ process MODIFICATION_ANALYSIS {
     cpus 4
     memory '16 GB'
     
-    publishDir "${params.output_dir}/modifications",  mode: 'copy' 
+    publishDir "${params.output_dir}/modifications",  mode: 'move' 
     
     input:
     tuple val(samplename), path(aligned_bam), path(reference_genome) 

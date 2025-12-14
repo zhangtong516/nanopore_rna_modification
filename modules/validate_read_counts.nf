@@ -4,7 +4,7 @@ process VALIDATE_READ_COUNTS {
     memory '4 GB'
     time '2h'
 
-    publishDir "${params.output_dir}/basecalling/${samplename}", mode: 'copy'
+    publishDir "${params.output_dir}/basecalling/${samplename}", mode: 'move'
 
     input:
     tuple val(samplename), path(file_list), val(chunk_id), path(basecalled_bam)

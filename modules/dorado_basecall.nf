@@ -4,7 +4,7 @@ process DORADO_BASECALL {
     memory '32 GB'
     time '2h 30m'  // Set to 2h 30m to allow cleanup before 3h limit
     
-    publishDir "${params.output_dir}/basecalling/${samplename}",  mode: 'copy'
+    publishDir "${params.output_dir}/basecalling/${samplename}",  mode: 'move'
     
     input:
     tuple val(samplename), path(file_list), val(chunk_id)

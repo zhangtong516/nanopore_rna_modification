@@ -3,7 +3,7 @@ process MODIFICATION_ANNOTATION {
     cpus 2
     memory '4 GB'
 
-    publishDir "${params.output_dir}/modifications",  mode: 'copy'
+    publishDir "${params.output_dir}/modifications",  mode: 'move'
 
     input:
     tuple val(samplename), path(modifications_bed)
