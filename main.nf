@@ -61,17 +61,27 @@ if (!params.reference_genome) {
 
 // Function to parse samplesheet
 def parse_samplesheet(samplesheet_path) {
-    def samples = []
-    def lines = file(samplesheet_path).readLines()
-    
+    // Aggregate multiple input_dir entries per samplename
+    def sampleDirs = [:].withDefault { [] }
+    def lines = new File(samplesheet_path).readLines()
+
     // Skip header line
     for (int i = 1; i < lines.size(); i++) {
         def fields = lines[i].split(',')
         if (fields.size() >= 2) {
             def samplename = fields[0].trim()
             def input_dir = fields[1].trim()
-            samples.add([samplename, input_dir])
+            if (input_dir) {
+                sampleDirs[samplename] << input_dir
+            }
         }
+    }
+
+    // Return list of [samplename, csv_of_dirs]
+    def samples = []
+    sampleDirs.each { name, dirs ->
+        def csv = dirs.join(',')
+        samples.add([name, csv])
     }
     return samples
 }
@@ -82,8 +92,9 @@ workflow {
     def samples = parse_samplesheet(params.samplesheet)
     
     sample_ch = Channel.fromList(samples)
-        .map { samplename, input_dir -> 
-            tuple(samplename, file(input_dir, type: 'dir'))
+        .map { samplename, input_dirs_csv -> 
+            // Pass comma-separated directories as value; CHUNK_FILES will expand
+            tuple(samplename, input_dirs_csv)
         }
     
     reference_ch = Channel.fromPath(params.reference_genome)

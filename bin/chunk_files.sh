@@ -1,26 +1,35 @@
 #!/bin/bash
 
 # Script to chunk FAST5/POD5 files for processing
-# Usage: chunk_files.sh <input_dir> <samplename> <chunk_size>
+# Usage: chunk_files.sh <input_dirs_csv> <samplename> <chunk_size>
 
-input_dir="$1"
+input_dirs_csv="$1"
 samplename="$2"
 chunk_size="$3"
 
 if [ $# -ne 3 ]; then
-    echo "Usage: $0 <input_dir> <samplename> <chunk_size>"
+    echo "Usage: $0 <input_dirs_csv> <samplename> <chunk_size>"
     exit 1
 fi
 
 echo "Chunking files for ${samplename}"
-echo "Input directory: ${input_dir}"
+echo "Input directories (CSV): ${input_dirs_csv}"
 echo "Chunk size: ${chunk_size}"
 
-# Find all FAST5/POD5 files and resolve real paths (not symlinks)
-find "${input_dir}/" -name "*.fast5" -o -name "*.pod5" | while read -r file; do
-    # Get the real path (resolve symlinks)
-    realpath "$file"
-done > all_files.txt
+> all_files.txt
+
+# Expand CSV into array of directories and gather files across all
+IFS="," read -r -a INPUT_DIRS <<< "$input_dirs_csv"
+for d in "${INPUT_DIRS[@]}"; do
+    if [ -d "$d" ]; then
+        echo "Scanning directory: $d"
+        find "$d/" -name "*.fast5" -o -name "*.pod5" | while read -r file; do
+            realpath "$file"
+        done >> all_files.txt
+    else
+        echo "WARNING: Directory not found or not a directory: $d" >&2
+    fi
+done
 
 # Check if we found any files
 if [ ! -s all_files.txt ]; then
