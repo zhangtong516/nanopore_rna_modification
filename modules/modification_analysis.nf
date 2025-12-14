@@ -9,7 +9,7 @@ process MODIFICATION_ANALYSIS {
     tuple val(samplename), path(aligned_bam), path(reference_genome) 
     
     output:
-    tuple val(samplename), path("${samplename}_modifications.bed"), emit: modifications_bed
+    tuple val(samplename), path("${samplename}_modifications.bed.gz"), emit: modifications_bed
     path("${samplename}_modification_analysis.log"), emit: modkit_log 
 
     
@@ -28,7 +28,8 @@ process MODIFICATION_ANALYSIS {
         --log-filepath ${samplename}_modification_analysis.log \
         --motif A 0 --motif T 0 --motif C 0 --motif G 0 \
         ${aligned_bam} ${samplename}_modifications.bed 
-
+    pigz -p ${task.cpus} ${samplename}_modifications.bed  
+    
     # Annotation and summary moved to separate module (MODIFICATION_ANNOTATION)
     """
 }

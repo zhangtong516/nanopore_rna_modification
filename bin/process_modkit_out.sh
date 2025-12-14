@@ -8,7 +8,7 @@ cov=1
 rate=0.0
 
 print_usage() {
-  echo "Usage: $(basename "$0") [-c min_cov] [-r min_rate_percent] <input_bed> <output_tsv>" >&2
+  echo "Usage: $(basename "$0") [-c min_cov] [-r min_rate_percent] <input_bed> <output_tsv> <cpus>" >&2
 }
 
 while getopts ":c:r:h" opt; do
@@ -41,7 +41,7 @@ fi
 # 12 N_mod, 13 N_canonical, 14 N_other_mod, 15 N_delete, 16 N_fail, 17 N_diff, 18 N_nocall
 # This script appends a 19th column 'modification' derived from the code in column 4.
 
-awk -v min_cov="$cov" -v min_rate="$rate" 'BEGIN {
+zcat "$input_file"  | awk -v min_cov="$cov" -v min_rate="$rate" 'BEGIN {
   FS="\t"; OFS="\t";
   # mapping from code -> modification name
   code_map["a"] = "m6A";
@@ -68,7 +68,7 @@ awk -v min_cov="$cov" -v min_rate="$rate" 'BEGIN {
     print $0, mod;
   }
 }
-' "$input_file" > "$output_file"
+' | pigz -p $cpus > "$output_file"
 
 echo "Processed ModKit output written to: $output_file"
 
