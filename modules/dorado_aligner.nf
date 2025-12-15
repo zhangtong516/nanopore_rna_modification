@@ -3,7 +3,7 @@ process DORADO_ALIGNER {
     cpus params.threads
     memory '32 GB'
     
-    publishDir "${params.output_dir}/alignment",  mode: 'move' 
+    // publishDir "${params.output_dir}/alignment",  mode: 'copy' 
     
     input:
     tuple val(samplename), path(basecalled_bam), val(chunk_id), path(reference_genome)
